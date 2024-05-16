@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,8 @@ import com.valeo.task.manager.enums.CategoryEnum;
 import com.valeo.task.manager.enums.DeleteTypes;
 import com.valeo.task.manager.enums.SearchTypesEnum;
 import com.valeo.task.manager.enums.SortingTypesEnum;
+import com.valeo.task.manager.exceptions.EmptyValueException;
+import com.valeo.task.manager.exceptions.TaskNotFoundException;
 import com.valeo.task.manager.interfaces.IComment;
 import com.valeo.task.manager.interfaces.ITask;
 import com.valeo.task.manager.models.History;
@@ -31,14 +34,6 @@ public class TaskManager {
 	private final AuditTrailService auditTrailService;
 	private final FileManagerService fileManagerService;
 	
-//	private IFileManager <ITask> fileManagerService;
-//	private INotificationsManager notificationManager;
-	
-//	public TaskManager(IFileManager<ITask> fileManagerService, INotificationsManager notificationManager) {
-//		this.fileManagerService = fileManagerService;
-//		this.notificationManager = notificationManager;
-//	}
-	
 	@Autowired
 	public TaskManager(AuditTrailService auditTrailService, FileManagerService fileManagerService) {
 		this.auditTrailService = auditTrailService;
@@ -46,7 +41,7 @@ public class TaskManager {
 	}
 	
 	@PostConstruct
-	public void blabla() throws IOException {
+	public void init() throws IOException {
 		this.tasks = fileManagerService.loadTasks();
 		auditTrailService.setAllActions(fileManagerService.loadAuditTrail());
 		this.setLastTaskId(this.tasks.size() + 1);
@@ -78,6 +73,7 @@ public class TaskManager {
 	}
 	
 	public String addComment(Integer taskID, IComment comment) {
+		if(Objects.isNull(comment.getText()) || comment.getText().isBlank()) throw new EmptyValueException("Comment text can not be empty.");
 		try {
 			ITask task =
 			this.tasks.stream()
@@ -123,25 +119,21 @@ public class TaskManager {
 				return ("Invalid delete type.");
 			}
 		} catch (Exception e) {
-			return ("Invalid task.");
+			throw new TaskNotFoundException("Task with " + deleteType.getText() + " '"+ text + "' is not found.");
+//			return ("Invalid task.");
 		}
 	}
 	
-	public ITask editTask(Integer id, ITask newTask) {
-		try {
-			ITask task = this.tasks.stream()
-				.filter(t -> t.getId().equals((id)))
-				.findFirst()
-				.get();
-			task.edit(newTask.getTitle(), newTask.getDescription(), newTask.getDueDate(), newTask.getStatus(), newTask.getPriority(), newTask.getCategory());
-			task.addHistory(new History("Edit: Task is edited."));
-			auditTrailService.addAction(task, "User edited task.");
-			fileManagerService.saveAuditTrail(auditTrailService.getAllActions());
-			fileManagerService.saveTasks(tasks);
-			return task;
-		} catch (Exception e) {
-			throw new RuntimeException("Task not found");
-		}
+	public ITask editTask(Integer id, ITask newTask) throws IOException {
+		ITask task = this.tasks.stream()
+			.filter(t -> Objects.equals(t.getId(), id))
+			.findFirst().orElseThrow(() -> new TaskNotFoundException("Task with ID: '" + id + "' is not found."));
+		task.edit(newTask.getTitle(), newTask.getDescription(), newTask.getDueDate(), newTask.getStatus(), newTask.getPriority(), newTask.getCategory());
+		task.addHistory(new History("Edit: Task is edited."));
+		auditTrailService.addAction(task, "User edited task.");
+		fileManagerService.saveAuditTrail(auditTrailService.getAllActions());
+		fileManagerService.saveTasks(tasks);
+		return task;
 	}
 	
 	public Set<ITask> searchTask(String text, Set<SearchTypesEnum> searchTypes) throws IOException {
@@ -196,6 +188,11 @@ public class TaskManager {
 		}
 		catch (ParseException e) {
 			System.out.println("Parsing error");
+		}
+		if(start.after(end)) {
+			Date temp = start;
+			start = end;
+			end = temp;
 		}
 		final Date finalStart = start;
 		final Date finalEnd = end;

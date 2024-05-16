@@ -10,13 +10,27 @@ import com.valeo.task.manager.interfaces.IComment;
 import com.valeo.task.manager.interfaces.IHistory;
 import com.valeo.task.manager.interfaces.ITask;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class Task implements ITask {
 	private Integer id;
+	@NotNull(message = "Name may not be null")
+	@NotBlank(message = "Name may not be blank")
 	private String title;
+	@Size(min = 3, max = 60, message = "Description must be between 3 and 60 characters")
 	private String description;
+	@NotNull(message = "Due date may not be null")
+	@NotBlank(message = "Due date may not be blank")
+	@Pattern(regexp = "\\d{2}-\\d{2}-\\d{4}", message = "Due date must be in the format dd-MM-yyyy")
 	private String dueDate;
+	@NotNull(message = "Status may not be null")
 	private StatusTypesEnum status;
+	@NotNull(message = "Priority may not be null")
 	private PriorityEnum priority;
+	@NotNull(message = "Category may not be null")
 	private CategoryEnum category;
 	private List<IComment> comments;
 	private List<IHistory> history;

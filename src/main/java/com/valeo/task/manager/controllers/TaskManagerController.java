@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +27,12 @@ import com.valeo.task.manager.models.Task;
 import com.valeo.task.manager.services.AuditTrailService;
 import com.valeo.task.manager.services.TaskManager;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+
 @RestController
 @RequestMapping("/tasks")
+@Validated
 public class TaskManagerController {
 	
 	private final TaskManager taskManager;
@@ -53,8 +58,12 @@ public class TaskManagerController {
 	public ResponseEntity<Set<ITask>> searchTasks(@RequestParam String text, @RequestParam Set<SearchTypesEnum> searchTypes) throws IOException {
 		return ResponseEntity.ok(taskManager.searchTask(text, searchTypes));
 	}
+	
 	@GetMapping("/filterbetweendates")
-	public ResponseEntity<List<ITask>> filterBetweenDates(@RequestParam String startDate, @RequestParam String endDate) {
+	public ResponseEntity<List<ITask>> filterBetweenDates(
+			@Pattern(regexp = "\\d{2}-\\d{2}-\\d{4}", message = "Due date must be in the format dd-MM-yyyy") @Valid @RequestParam String startDate, 
+			@Pattern(regexp = "\\d{2}-\\d{2}-\\d{4}", message = "Due date must be in the format dd-MM-yyyy") @Valid @RequestParam String endDate) 
+	{
 		return ResponseEntity.ok(taskManager.filterBetweenDates(startDate, endDate));
 	}
 	
@@ -69,12 +78,12 @@ public class TaskManagerController {
 	}
 	
 	@PostMapping("/addtask")
-	public ResponseEntity<ITask> addTask(@RequestBody Task task) throws IOException {
+	public ResponseEntity<ITask> addTask(@Valid @RequestBody Task task) throws IOException {
 		return ResponseEntity.ok(taskManager.addTask(task));
 	}
 	
 	@PutMapping("/edittask/{id}")
-    public ResponseEntity<ITask> editTask(@PathVariable Integer id, @RequestBody Task task) {
+    public ResponseEntity<ITask> editTask(@PathVariable Integer id, @Valid @RequestBody Task task) throws IOException {
         return ResponseEntity.ok(taskManager.editTask(id, task));
     }
 	
