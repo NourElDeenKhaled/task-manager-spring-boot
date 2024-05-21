@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,7 +26,7 @@ import com.valeo.task.manager.interfaces.ITask;
 import com.valeo.task.manager.models.Comment;
 import com.valeo.task.manager.models.Task;
 import com.valeo.task.manager.services.AuditTrailService;
-import com.valeo.task.manager.services.TaskManager;
+import com.valeo.task.manager.services.TaskManagerService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
@@ -35,11 +36,11 @@ import jakarta.validation.constraints.Pattern;
 @Validated
 public class TaskManagerController {
 	
-	private final TaskManager taskManager;
+	private final TaskManagerService taskManager;
 	private final AuditTrailService auditTrailService;
 	
 	@Autowired
-	public TaskManagerController(TaskManager taskManager, AuditTrailService auditTrailService) {
+	public TaskManagerController(TaskManagerService taskManager, AuditTrailService auditTrailService) {
 		this.taskManager = taskManager;
 		this.auditTrailService = auditTrailService;
 	}
@@ -48,6 +49,11 @@ public class TaskManagerController {
 	public ResponseEntity<List<ITask>> getAllTasks() throws IOException {
 		return ResponseEntity.ok(taskManager.getAllTasks());
 	}
+	
+	@GetMapping("/gettask/{id}")
+    public ResponseEntity<ITask> getTaskById(@PathVariable Integer id) throws IOException {
+        return ResponseEntity.ok(taskManager.getTaskById(id));
+    }
 	
 	@GetMapping("/admin/getallactions")
 	public ResponseEntity<List<String>> getAllActions() {
@@ -79,7 +85,7 @@ public class TaskManagerController {
 	
 	@PostMapping("/addtask")
 	public ResponseEntity<ITask> addTask(@Valid @RequestBody Task task) throws IOException {
-		return ResponseEntity.ok(taskManager.addTask(task));
+		return ResponseEntity.status(HttpStatus.CREATED).body(taskManager.addTask(task));
 	}
 	
 	@PutMapping("/edittask/{id}")

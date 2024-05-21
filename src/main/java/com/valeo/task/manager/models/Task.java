@@ -14,7 +14,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
+import lombok.Data;
 
+@Data
 public class Task implements ITask {
 	private Integer id;
 	@NotNull(message = "Name may not be null")
@@ -40,6 +43,7 @@ public class Task implements ITask {
 		this.history = new ArrayList<IHistory>();
 	}
 	
+	@Builder
 	public Task(Integer id, String title, String description, String dueDate, StatusTypesEnum status, PriorityEnum priority, CategoryEnum category) {
 		this.id = id;
 		this.title = title;
@@ -48,6 +52,8 @@ public class Task implements ITask {
 		this.status = status;
 		this.priority = priority;
 		this.category = category;
+		this.comments = new ArrayList<IComment>();
+		this.history = new ArrayList<IHistory>();
 	}
 	public List<IComment> getComments() {
 		return comments;
@@ -129,6 +135,6 @@ public class Task implements ITask {
 				+ "\nStatus: " + this.status
 				+ "\nPriority: " + this.priority
 				+ "\nCategory: " + this.category
-				+ "\n=========================";
+				+ "\n=========================\n";
 	}
 }

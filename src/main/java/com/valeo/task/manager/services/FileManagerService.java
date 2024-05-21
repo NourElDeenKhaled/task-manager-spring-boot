@@ -8,15 +8,20 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.valeo.task.manager.interfaces.ITask;
-import com.valeo.task.manager.models.Task;
 
 @Service
 public class FileManagerService {
-	private final ObjectMapper objectMapper = new ObjectMapper();
-	private final File tasksFile = new File("tasks.json");
-	private final File auditTrailFile = new File("audit-trail.json");
-
+	private ObjectMapper objectMapper = new ObjectMapper();
+	private File tasksFile = new File("tasks.json");
+	private File auditTrailFile = new File("audit-trail.json");
+	
 	public FileManagerService() {}
+
+	public FileManagerService(ObjectMapper objectMapper, File tasksFile, File auditTrailFile) {
+		this.objectMapper = objectMapper;
+		this.tasksFile = tasksFile;
+		this.auditTrailFile = auditTrailFile;
+	}
 
 	public void saveTasks(List<ITask> tasks) throws IOException {
 		objectMapper.writeValue(tasksFile, tasks);

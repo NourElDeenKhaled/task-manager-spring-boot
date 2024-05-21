@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ import com.valeo.task.manager.models.History;
 import jakarta.annotation.PostConstruct;
 
 @Service
-public class TaskManager {
+public class TaskManagerService {
 	private Integer lastTaskId = 0;
 	private List<ITask> tasks = new ArrayList<ITask>();
 	
@@ -35,7 +34,7 @@ public class TaskManager {
 	private final FileManagerService fileManagerService;
 	
 	@Autowired
-	public TaskManager(AuditTrailService auditTrailService, FileManagerService fileManagerService) {
+	public TaskManagerService(AuditTrailService auditTrailService, FileManagerService fileManagerService) {
 		this.auditTrailService = auditTrailService;
 		this.fileManagerService = fileManagerService;
 	}
@@ -59,6 +58,20 @@ public class TaskManager {
 		auditTrailService.addAction("User retrieved all tasks data.");
 		fileManagerService.saveAuditTrail(auditTrailService.getAllActions());
 		return tasks;
+	}
+	
+	public ITask getTaskById(Integer id) throws IOException {
+		try {
+		ITask index = this.tasks.stream()
+				.filter(t -> t.getId().equals(id))
+				.findFirst()
+				.get();
+				auditTrailService.addAction(index, "User retrieved data of task (ID:" + index.getId() +").");
+				fileManagerService.saveAuditTrail(auditTrailService.getAllActions());
+				return index;
+		} catch (Exception e) {
+			throw new TaskNotFoundException("Task with ID: '"+ id + "' is not found.");
+		}
 	}
 	
 	public ITask addTask(ITask task) throws IOException {

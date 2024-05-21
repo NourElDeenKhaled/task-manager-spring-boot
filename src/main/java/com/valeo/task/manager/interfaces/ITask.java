@@ -8,6 +8,8 @@ import com.valeo.task.manager.enums.PriorityEnum;
 import com.valeo.task.manager.enums.StatusTypesEnum;
 import com.valeo.task.manager.models.Task;
 
+import lombok.Data;
+
 @JsonDeserialize(as = Task.class)
 public interface ITask {
 	Integer getId();
